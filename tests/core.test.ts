@@ -1,12 +1,13 @@
 import {describe,it,expect} from 'vitest';
-import {parseFloor,readProgress,saveProgress,collect,project,unproject,screenMovement,driftMovement,canStand,SAVE_KEY} from '../src/core';
-import {floors,ROOM_ENTRY,EXIT,DOOR,LIFT_DOOR,ROOM_DOOR,PANEL,LIFT_ENTRY,LOBBY_LIFT_ENTRY,sceneLayout,exitDoor,obstacles} from '../src/rooms';
+import {parseFloor,readProgress,saveProgress,collect,project,unproject,screenMovement,driftMovement,canStand,distance,SAVE_KEY} from '../src/core';
+import {floors,ROOM_ENTRY,EXIT,DOOR,LIFT_DOOR,ROOM_DOOR,PANEL,LIFT_ENTRY,LIFT_PANEL_ENTRY,LOBBY_LIFT_ENTRY,sceneLayout,exitDoor,obstacles} from '../src/rooms';
 import {propKinds,effectKinds} from '../src/catalogue-art';
 import {validateSheetShape,animationRow} from '../src/avatars';
 import {SPACE_FLOOR,spacePlanets,spacePlanetsAt,spaceCanStand,resolveSpaceOverlap} from '../src/space';
 import {plantExplorerPose} from '../src/plant-encounter';
 import {FLIP_DELAY,FLIP_DURATION,FLIP_ROOM_BOUNDS,FLIP_VIEW_BOUNDS,flipAngle,flipInProgress,flipView,roomToViewPoint,viewToRoomPoint,screenToRoomInput} from '../src/upside-down';
 import {dentistPose,DENTIST_POSITION} from '../src/dentist';
+import {BLACK_HOLE_DURATION,blackHolePose,blackHolePhase} from '../src/black-hole';
 describe('authored building',()=>{
  it('preserves all 101 stories, 135 props and 94 effects',()=>{expect(floors).toHaveLength(101);expect(new Set(floors.map(f=>f.name)).size).toBe(101);expect(new Set(floors.flatMap(f=>f.props.map(p=>p.kind))).size).toBe(135);expect(effectKinds.size).toBe(94);for(const f of floors){expect(effectKinds.has(f.effect)).toBe(true);for(const p of f.props)expect(propKinds.has(p.kind)).toBe(true);expect(canStand(ROOM_ENTRY,obstacles('room',f))).toBe(true);expect(canStand(EXIT,obstacles('room',f))).toBe(true);expect(canStand(f.focus,obstacles('room',f))).toBe(true);}});
  it('every room has a connected walkable route from entry to discovery and exit',()=>{for(const f of floors){const obs=obstacles('room',f),queue=[ROOM_ENTRY],seen=new Set<string>();let found=false,exit=false;while(queue.length){const p=queue.shift()!,key=`${p.x.toFixed(1)},${p.y.toFixed(1)}`;if(seen.has(key)||!canStand(p,obs))continue;seen.add(key);if(Math.hypot(p.x-f.focus.x,p.y-f.focus.y)<.5)found=true;if(Math.hypot(p.x-EXIT.x,p.y-EXIT.y)<.5)exit=true;for(const [x,y]of[[.25,0],[-.25,0],[0,.25],[0,-.25]]){const q={x:p.x+x,y:p.y+y};if(q.x>=.3&&q.x<=11.7&&q.y>=.3&&q.y<=9.7)queue.push(q);}}expect(found,`floor ${f.id}: discovery`).toBe(true);expect(exit,`floor ${f.id}: exit`).toBe(true);}});
@@ -18,6 +19,7 @@ describe('authored building',()=>{
    expect(canStand(spawn,[],layout.width,layout.height)).toBe(true);expect(Math.hypot(spawn.x-door.x,spawn.y-door.y)).toBeLessThan(1.5);expect(door.x===0||door.y===0).toBe(true);
   }
   expect(PANEL.y).toBe(0);expect(PANEL.x).toBeLessThan(lift.width);expect(canStand({x:6.1,y:2},[],lift.width,lift.height)).toBe(false);expect(canStand({x:3,y:5.1},[],lift.width,lift.height)).toBe(false);
+  expect(canStand(LIFT_PANEL_ENTRY,[],lift.width,lift.height)).toBe(true);expect(distance(LIFT_PANEL_ENTRY,PANEL)).toBeLessThan(22);expect(distance(LIFT_PANEL_ENTRY,LIFT_DOOR)).toBeGreaterThan(10);
  });
  it('keeps the rear wall apex and room floor between the HUD and prompt',()=>{
   const rear=project({x:0,y:0},64),front=project({x:12,y:10});
@@ -35,6 +37,13 @@ describe('authored building',()=>{
   expect(spacePlanetsAt(2,true)).toEqual(spacePlanetsAt(20,true));
  });
  it('keeps the bonus floor deadly and non-collectible',()=>{expect(floors[100].deadly).toBe(true);const p=readProgress(null);expect(collect(p,101)).toBe(false);});
+});
+describe('black hole fall',()=>{
+ it('pulls into a walkable aperture, then visibly falls downward and fades within about a second',()=>{
+  const room=floors[25],hole=room.props[0],start=blackHolePose(room.focus,hole,0),pulled=blackHolePose(room.focus,hole,.35),early=blackHolePose(room.focus,hole,.45),late=blackHolePose(room.focus,hole,.95);
+  expect(canStand(hole,obstacles('room',room))).toBe(true);expect(start.scale).toBe(1);expect(pulled.scale).toBeLessThan(.4);expect(blackHolePhase(.2)).toBe('pull');expect(blackHolePhase(.7)).toBe('fall');expect(blackHolePhase(1.2)).toBe('fade');expect(late.position.y-early.position.y).toBeGreaterThan(80);expect(late.scale).toBeLessThan(early.scale);expect(blackHolePose(room.focus,hole,BLACK_HOLE_DURATION).fade).toBe(1);expect(BLACK_HOLE_DURATION).toBeLessThan(1.5);
+  for(const age of [0,.2,.5,.9,1.2]){const pose=blackHolePose(room.focus,hole,age,true);expect(pose.rotation).toBe(0);if(age>=.38)expect(pose.position.x).toBe(240);}
+ });
 });
 describe('simulation and progress',()=>{
  it('clamps positive whole floors above 100 to 101 without accepting fractional or exponent input',()=>{for(const value of ['1','07','100','101',' 42 '])expect(parseFloor(value)).not.toBeNull();expect(parseFloor('100')).toBe(100);expect(parseFloor('0007')).toBe(7);for(const value of ['102','9999',' 123456789 ','9'.repeat(1000)])expect(parseFloor(value)).toBe(101);for(const value of ['','0','0000','1e2','1.0','-1','0x10','NaN','Infinity'])expect(parseFloor(value)).toBeNull();});

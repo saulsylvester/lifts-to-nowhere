@@ -37,7 +37,7 @@ The game runs in the browser and uses local assets. It needs no account, backend
 | **Escape** | Close a dialog |
 | **R** | Return directly to the lift |
 
-The **R** shortcut keeps your explorer and discoveries. During a lift ride it takes you to the selected floor’s cabin; it also clears an encounter. Text fields retain normal typing.
+The **R** shortcut places you beside the lift’s wall keypad: press **E** immediately to choose another floor. It keeps your explorer and discoveries. During a lift ride it takes you to the selected floor’s cabin; it also clears an encounter. Text fields retain normal typing.
 
 Follow the red carpet through the lobby doors. In the smaller lift cabin, approach the brass wall panel and press **E** to enter a positive whole floor number. Numbers above 100 take you to floor 101. After the ride, leave through the lift doors to enter that room. Use its brass **LIFT** door to return to the cabin. Click the explorer portrait to choose Andy, Ding, or an imported pet; switching explorers preserves your location and discoveries.
 
@@ -47,7 +47,7 @@ The building has 100 discoveries, a hidden bonus room, and plenty of strange roo
 
 - **04 — The Shy Lighthouse:** entering starts a six-second flood. Translucent light-blue water fills the room; swim to the lighthouse and back to the door.
 - **12 — Gravity on Holiday:** loose objects and furniture levitate.
-- **26 — The Polite Black Hole:** offer it a biscuit and watch nearby objects shrink toward the hole.
+- **26 — The Polite Black Hole:** walk close to the hole or press **E** to offer a biscuit. It pulls you in, shows a brief falling cutscene, then drops you safely beside the lift keypad with your discovery stamp.
 - **43 — A Dentist for Zippers:** meet the dentist, have your zipper examined, and collect the original stamp.
 - **69 — The Upside-Down Bakery:** the room turns over after you arrive. Walk around while inverted, collect the discovery, and return through the rotated door.
 - **87 — The Jellybean Planet:** step through a doorway into space. Float among four planets; press **E** away from the door or collect the discovery to set them moving.
@@ -91,7 +91,7 @@ The browser tests use Playwright. If Chromium is not installed, run `npx playwri
 
 Add `?dev=1` to the local game URL to show the development room inspector. It can jump to a floor, play an encounter, or advance to the next floor. The inspector API (`window.__nowhere`) is available only in development and is omitted from production builds.
 
-Capture helpers include `scripts/inspect-walk.mjs` for Andy’s walking atlas and game-speed preview, `scripts/inspect-plant.mjs` for the Room 101 encounter, `scripts/inspect-small-plant.mjs` for its growth stages, and `scripts/inspect-space-motion.mjs` for the moving planets. Animated previews require ffmpeg.
+Capture helpers include `scripts/inspect-walk.mjs` for Andy’s walking atlas and game-speed preview, `scripts/inspect-plant.mjs` for the Room 101 encounter, `scripts/inspect-small-plant.mjs` for its growth stages, `scripts/inspect-space-motion.mjs` for the moving planets, and `scripts/inspect-black-hole.mjs --gif` for the fall and lift return. Animated previews require ffmpeg.
 
 ## Art and code
 

@@ -8,6 +8,7 @@ import {SPACE_FLOOR,spacePlanetsAt,drawSpaceBackdrop,drawSpacePlanet} from './sp
 import {drawPlantEncounter,plantExplorerPose,plantEncounterPhase} from './plant-encounter';
 import {FLIP_FLOOR,flipView} from './upside-down';
 import {DENTIST_FLOOR,dentistPose,drawDentist} from './dentist';
+import {BLACK_HOLE_FLOOR,drawBlackHoleCutscene} from './black-hole';
 export type GameState='lobby'|'elevator'|'travel'|'room'|'gameover';
 export type Model={state:GameState;floor:number;room:RoomDefinition|null;player:Point;facing:AnimationName;moving:boolean;walkDistance?:number;roomEnteredAt?:number;spaceStart?:number|null;locomotion:'walk'|'swim'|'float';velocity:Point;started:boolean;effect:{start:number;deadly?:boolean;rewarded?:boolean;origin:Point}|null;floodStart:number|null;flipStart?:number|null;travelStart:number;destination:number;reducedMotion:boolean;celebration:number;avatar:AvatarDefinition;collected:Set<number>};
 const INK='#10213d',GOLD='#edb94e',CREAM='#fff0bf';
@@ -223,6 +224,7 @@ export function render(context:CanvasRenderingContext2D,model:Model,time:number)
  const flooded=(model.state==='room'||model.state==='gameover')&&room?.id===4&&model.floodStart!==null;
  const floodAge=flooded?Math.max(0,time-model.floodStart!):0;
  const age=model.effect?time-model.effect.start:null;
+ const blackHole=model.state==='room'&&room?.id===BLACK_HOLE_FLOOR&&age!==null?{origin:model.effect!.origin,hole:room.props[0],age,time,reducedMotion:model.reducedMotion,avatar:model.avatar}:null;
  const plantEncounter=model.effect?.deadly&&room&&age!==null?{plant:room.props[0],origin:model.effect.origin,age,time,reducedMotion:model.reducedMotion,avatarId:model.avatar.id,avatarColors:explorerFragmentColors(model.avatar)}:null;
  const idlePlant=!plantEncounter&&room?.id===101&&(model.state==='room'||model.state==='gameover')?{plant:room.props[0],origin:model.player,age:0,time,reducedMotion:model.reducedMotion,avatarId:model.avatar.id}:null;
  const nearDoor=(at:Point)=>Math.hypot(model.player.x-at.x,model.player.y-at.y)<1.65;
@@ -258,7 +260,7 @@ export function render(context:CanvasRenderingContext2D,model:Model,time:number)
   sprites.push({depth:pose.position.x+pose.position.y,draw:()=>drawDentist(ctx,{age,time:t,reducedMotion:model.reducedMotion,entryAge})});
  }
  let animation=(model.moving||model.avatar.id==='andy')?model.facing:'idle';if(age!==null&&!model.effect?.deadly)animation='celebrate';
- let player=project(model.player),playerScale=1,playerRotation=0,visible=true;
+ let player=project(model.player),playerScale=1,playerRotation=0,visible=!blackHole;
  if(plantEncounter){const pose=plantExplorerPose(plantEncounter.origin,plantEncounter.plant,plantEncounter.age,model.reducedMotion);player=pose.position;playerScale=pose.scale;playerRotation=pose.rotation;visible=pose.visible;animation='failed';}
  const playerPoint=player;
  sprites.push({depth:model.player.x+model.player.y+.01,draw:()=>{if(visible){
@@ -288,11 +290,12 @@ export function render(context:CanvasRenderingContext2D,model:Model,time:number)
  if(plantEncounter)drawPlantEncounter(ctx,plantEncounter,'front');
  if(flooded)drawFlood(ctx,time,floodAge,model.reducedMotion,'surface');
  if((model.state==='room'||model.state==='gameover')&&room){
-  if(age!==null&&!plantEncounter){let planetIndex=0;const mapped={...room,props:room.props.map(p=>{const at=space&&p.kind==='planet'?planets[planetIndex++]:p;return {...p,...project(at)};})};const c=project(model.player);roomEffect(ctx,{room:mapped,andy:c,effect:model.effect,reducedMotion:model.reducedMotion,explorerName:model.avatar.name,drawExplorer:(x:number,y:number)=>drawAvatar(ctx,model.avatar,x,y,t,'idle',false,model.reducedMotion)},t,model.reducedMotion?1.2:age);}
-  else if(!model.collected.has(room.id)&&!room.deadly){const a=project(space?planets[0]:room.props[0]);spark(a.x,a.y-(space?planets[0].z+planets[0].radius+7:room.id===7?86:room.id===73?86:56)+Math.round(Math.sin(t*3)*2));}
+  if(age!==null&&!plantEncounter&&!blackHole){let planetIndex=0;const mapped={...room,props:room.props.map(p=>{const at=space&&p.kind==='planet'?planets[planetIndex++]:p;return {...p,...project(at)};})};const c=project(model.player);roomEffect(ctx,{room:mapped,andy:c,effect:model.effect,reducedMotion:model.reducedMotion,explorerName:model.avatar.name,drawExplorer:(x:number,y:number)=>drawAvatar(ctx,model.avatar,x,y,t,'idle',false,model.reducedMotion)},t,model.reducedMotion?1.2:age);}
+  else if(age===null&&!model.collected.has(room.id)&&!room.deadly){const a=project(space?planets[0]:room.props[0]);spark(a.x,a.y-(space?planets[0].z+planets[0].radius+7:room.id===7?86:room.id===73?86:56)+Math.round(Math.sin(t*3)*2));}
  }
  ctx.restore();
- if((model.state==='room'||model.state==='gameover')&&room&&model.collected.has(room.id))text('✦ DISCOVERED',240,287,GOLD,7);
+ if(blackHole)drawBlackHoleCutscene(ctx,blackHole);
+ if((model.state==='room'||model.state==='gameover')&&room&&model.collected.has(room.id)&&!blackHole)text('✦ DISCOVERED',240,287,GOLD,7);
  if(model.state==='travel'){text('BETWEEN HERE & ELSEWHERE',240,284,GOLD,7);for(let i=0;i<6;i++)rect(201+i*14,295,9,3,(time-model.travelStart)*3>i?GOLD:'#37556c');}
  if(model.celebration>time&&!model.reducedMotion)for(let i=0;i<48;i++)rect((i*71)%480,(time*32+i*17)%320,2,3,['#ffd85b','#f0708a','#60c9b7'][i%3]);
 }

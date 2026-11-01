@@ -26,6 +26,7 @@ export class Sound {
     source.connect(filter);filter.connect(gain);gain.connect(this.ctx.destination);source.start(t);source.stop(t+duration+.02);
   }
   play(name, floor = 0) {
+    if(name==='black-hole'){[392,294,196,131,65].forEach((f,i)=>this.tone(f,.2,'triangle',.035,i*.15));this.noise(.45,.02,.38);}
     if(name==='room-flip'){[147,196,262,196,98].forEach((f,i)=>this.tone(f,.16,'triangle',.026,i*.1));this.noise(.25,.016,.36);}
     if(name==='plant-growing')[62,78,98,131].forEach((f,i)=>this.tone(f,.28,'sawtooth',.025,i*.16));
     if(name==='plant-grabbing'){this.tone(186,.25,'triangle',.045);this.tone(93,.24,'square',.023,.1);}
