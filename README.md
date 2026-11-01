@@ -2,11 +2,11 @@
 
 One lift. One hundred improbable places to visit.
 
-Lift to Nowhere is a keyboard exploration game made for the [London Codex Community Hack](https://luma.com/dde-ldn-hack). Explore as **Andy**, or pick **Ding**, a small, brass service bell made for the demo. You can also import a downloaded Codex pet sprite sheet.
+Lift to Nowhere is a keyboard exploration game made for the [London Codex Community Hack](https://luma.com/dde-ldn-hack). Explore as **Ambassador Andy**, **Ding** ([my](https://github.com/saulsylvester/) Codex Pex), a small, lobby service bell made for the demo, or you can also import a downloaded Codex pet sprite.
 
-This is a strong example of what happens when image and coding models work together on a real project. **GPT-image** turns written art direction and visual references into usable character and prop artwork. **Astra** helps shape the ideas and interactions; **Sol** builds them into a working TypeScript game, with movement, collisions, rooms, interface, and sound. The result is more than a set of generated images: the art appears inside a playable world.
+I wanted to build a fun, workable & immersive example of what happens when image and coding models work together on a real project. **GPT-image** turns written art direction and visual references into usable character and prop artwork. **Astra** helps shape the ideas and interactions; **Sol** builds them into a working TypeScript game, with movement, collisions, rooms, interface, and sound. The result is more than a set of generated images: the art appears inside a playable world.
 
-The whole process is iterative. Describe a scene, make its art, wire it into the game, then inspect a screenshot and ask for a specific improvement. That feedback loop lets the models help across concept art, implementation, and visual polish, while keeping the result coherent and playable. Lift to Nowhere is a compact demo of that end-to-end creative collaboration.
+The whole development process was iterative. Described a scene, make its art, wire it into the game, then inspect a screenshot and ask for a specific improvement. That feedback loop lets the models help across concept art, implementation, and visual polish, while keeping the result coherent and playable. Lift to Nowhere is a compact demo of that end-to-end creative collaboration.
 
 ## Run the game
 
